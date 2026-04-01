@@ -240,12 +240,6 @@ aiqt follows [Semantic Versioning](https://semver.org/):
 - [ ] **Phase 3**: Cross-file analysis (duplicate code detection, repeated constants), npm publish
 - [ ] **Phase 4**: LLM-powered deep review mode (separation of concerns, semantic duplication)
 
-## Related Projects
-
-- [code-review-graph](https://github.com/tirth8205/code-review-graph) — Builds a persistent structural map of your codebase using Tree-sitter parsing for blast-radius analysis and optimized AI code reviews. Complementary to aiqt: code-review-graph maps _structure_, aiqt finds _antipatterns_.
-- [ast-grep](https://github.com/ast-grep/ast-grep) — The tree-sitter-based AST tool that powers aiqt's pattern matching engine.
-- [mcptest](https://github.com/bhvbhushan/mcptest) — Quality gate for MCP servers. Compliance, security, and efficiency testing. Sister project to aiqt.
-
 ## License
 
 [MIT](LICENSE)
