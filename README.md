@@ -55,9 +55,9 @@ Tested against 10 popular open-source vibe-coded projects (April 2025). These ar
 | [**code-review-graph**](https://github.com/tirth8205/code-review-graph) | 3.9K | 94 | 410 | 139 unchecked DB results, 71 N+1 queries, 6 SQL injections |
 | [**vibe-check-mcp**](https://github.com/PV-Bhat/vibe-check-mcp-server) | 480 | 53 | 113 | 74 console.logs, 18 `any` types, 9 god functions |
 | [**codeledger**](https://github.com/bhvbhushan/codeledger) | 3 | 54 | 30 | 13 god functions, 6 SQL injections, 5 `any` types |
-| [**mcptest**](https://github.com/bhvbhushan/mcptest) | — | 37 | 10 | 6 god functions, 2 console.logs, 1 double type assertion |
+| [**mcptest**](https://github.com/bhvbhushan/mcptest) | — | 37 | 1 | 1 god function |
 
-**4,522 findings** across **2,062 files** in 10 vibe-coded projects. Most common antipatterns: god functions (38%), excessive `any` (21%), leftover `console.log` (26%).
+**4,513 findings** across **2,062 files** in 10 vibe-coded projects. Most common antipatterns: god functions (38%), excessive `any` (21%), leftover `console.log` (26%).
 
 ### Example Output
 
