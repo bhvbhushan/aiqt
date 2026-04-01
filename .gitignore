@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.bun/
+
+# Build
+dist/
+*.tgz
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code / gstack (local tooling)
+.claude/
+.gstack/
+
+# Environment
+.env
+.env.*
+
+# Test coverage
+coverage/
+
+**/CLAUDE.md
+
+docs/*
