@@ -40,18 +40,24 @@ aiqt scan . --format text
 aiqt scan . --config .aiqt.yml
 ```
 
-## Real-World Results
+## Benchmarks
 
-Validated against 4 production codebases across different domains (2,019 files, ~300K LOC). These are real results, not synthetic:
+Tested against 10 popular open-source vibe-coded projects (April 2025). These are real results, not synthetic:
 
-| Codebase Type | Files | Findings | Key Issues Found |
-|---------------|:-----:|:--------:|------------------|
-| **Full-stack SaaS** (Next.js + Prisma) | 484 | 1,622 | 2,557-line god function, auth tokens in localStorage, 10 double type assertions |
-| **API-heavy backend** (Next.js + Supabase) | 772 | 1,389 | 628 console.logs in prod, unsanitized `dangerouslySetInnerHTML`, 485 god functions |
-| **Microservices** (TypeScript + MongoDB) | 516 | 3,069 | 539 god functions, 4 dead code paths, 43 unchecked DB results |
-| **Edge functions** (Supabase + Deno) | 247 | 364 | N+1 queries in edge functions, 5 fire-and-forget DB mutations |
+| Project | Stars | Files | Findings | Key Issues Found |
+|---------|:-----:|:-----:|:--------:|------------------|
+| [**context7**](https://github.com/upstash/context7) | 51.3K | 68 | 118 | 71 console.logs, 21 god functions, 3 N+1 queries |
+| [**dyad**](https://github.com/dyad-sh/dyad) | 20K | 970 | 1,104 | 402 god functions, 47 unchecked DB results, 12 placeholder values |
+| [**bolt.diy**](https://github.com/stackblitz-labs/bolt.diy) | 19.2K | 398 | 949 | 294 `any` types, 9 `dangerouslySetInnerHTML`, 24 N+1 queries |
+| [**screenpipe**](https://github.com/screenpipe/screenpipe) | 17.9K | 362 | 1,340 | 387 `any` types, 236 empty error handlers, 3 dead code paths |
+| [**browser-tools-mcp**](https://github.com/AgentDeskAI/browser-tools-mcp) | 7.2K | 12 | 420 | 319 console.logs, 49 `any` types, 15 empty error handlers |
+| [**magic-mcp**](https://github.com/21st-dev/magic-mcp) | 4.6K | 14 | 28 | 22 console.logs, 3 empty error handlers, 3 god functions |
+| [**code-review-graph**](https://github.com/tirth8205/code-review-graph) | 3.9K | 94 | 410 | 139 unchecked DB results, 71 N+1 queries, 6 SQL injections |
+| [**vibe-check-mcp**](https://github.com/PV-Bhat/vibe-check-mcp-server) | 480 | 53 | 113 | 74 console.logs, 18 `any` types, 9 god functions |
+| [**codeledger**](https://github.com/bhvbhushan/codeledger) | 3 | 54 | 30 | 13 god functions, 6 SQL injections, 5 `any` types |
+| [**mcptest**](https://github.com/bhvbhushan/mcptest) | — | 37 | 10 | 6 god functions, 2 console.logs, 1 double type assertion |
 
-Verified true positive rate: **~80%** across spot-checked findings.
+**4,522 findings** across **2,062 files** in 10 vibe-coded projects. Most common antipatterns: god functions (38%), excessive `any` (21%), leftover `console.log` (26%).
 
 ### Example Output
 
