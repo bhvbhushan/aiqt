@@ -1,0 +1,66 @@
+{
+  "name": "aiqt",
+  "version": "0.1.0",
+  "description": "AI code quality toolkit — deterministic linter for the AI coding era",
+  "type": "module",
+  "bin": {
+    "aiqt": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --outdir dist --target node",
+    "test": "bun test",
+    "lint": "bunx biome check",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "linter",
+    "ai",
+    "code-quality",
+    "ast",
+    "static-analysis"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bhvbhushan/aiqt"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@ast-grep/napi": "^0.42.0",
+    "@ast-grep/lang-python": "^0.0.6",
+    "commander": "^13.1.0",
+    "yaml": "^2.7.1",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/sarif": "^2.1.7",
+    "bun-types": "^1.3.11",
+    "typescript": "^5.8.3"
+  },
+  "contributes": {
+    "problemMatchers": [
+      {
+        "name": "aiqt",
+        "owner": "aiqt",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s+(error|warning|info)\\s+(.+)\\s+\\[(.+)\\]$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5,
+          "code": 6
+        }
+      }
+    ]
+  }
+}

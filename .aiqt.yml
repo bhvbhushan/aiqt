@@ -1,0 +1,10 @@
+ignore:
+  - "node_modules/**"
+  - "dist/**"
+  - "test/fixtures/**"
+  - "**/*.d.ts"
+  - "bun.lock"
+
+rules:
+  excessive-comment-ratio:
+    threshold: 0.6

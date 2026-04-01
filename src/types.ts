@@ -1,0 +1,90 @@
+import type { SgRoot } from "@ast-grep/napi";
+
+/** Supported language identifiers */
+export type Lang = "javascript" | "typescript" | "tsx" | "python";
+
+/** A detector finds code quality issues in parsed files */
+export interface Detector {
+  id: string;
+  meta: DetectorMeta;
+  detect(ctx: DetectionContext): Finding[];
+}
+
+/** Metadata describing a detector */
+export interface DetectorMeta {
+  name: string;
+  description: string;
+  severity: "error" | "warning" | "info";
+  category: "correctness" | "quality" | "security" | "testing";
+  languages: Lang[];
+}
+
+/** Context passed to each detector for a single file */
+export interface DetectionContext {
+  file: FileInfo;
+  root: SgRoot;
+  source: string;
+  project: ProjectInfo;
+  config: RuleConfig;
+}
+
+/** Information about a file being scanned */
+export interface FileInfo {
+  path: string;
+  absolutePath: string;
+  language: Lang;
+  extension: string;
+}
+
+/** A single finding produced by a detector */
+export interface Finding {
+  detectorId: string;
+  message: string;
+  severity: "error" | "warning" | "info";
+  file: string;
+  line: number;
+  column: number;
+  endLine?: number;
+  endColumn?: number;
+  suggestion?: string;
+}
+
+/** Project-level information derived from manifest files */
+export interface ProjectInfo {
+  dependencies: Set<string>;
+  devDependencies: Set<string>;
+  manifests: string[];
+}
+
+/** Top-level aiqt configuration */
+export interface AiqtConfig {
+  rules: Record<string, RuleConfig>;
+  ignore: string[];
+}
+
+/** Per-rule configuration */
+export interface RuleConfig {
+  severity?: "error" | "warning" | "info" | "off";
+  [key: string]: unknown;
+}
+
+/** Result of a complete scan */
+export interface ScanResult {
+  findings: Finding[];
+  filesScanned: number;
+  errors: ScanError[];
+  timing?: TimingInfo;
+}
+
+/** Error encountered during scanning */
+export interface ScanError {
+  file: string;
+  detectorId?: string;
+  message: string;
+}
+
+/** Timing information for performance tracking */
+export interface TimingInfo {
+  totalMs: number;
+  perDetector: Record<string, number>;
+}

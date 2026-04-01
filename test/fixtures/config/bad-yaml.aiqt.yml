@@ -1,0 +1,3 @@
+rules:
+  this is not valid yaml: [
+    unclosed bracket

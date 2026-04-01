@@ -1,0 +1,7 @@
+[project]
+name = "myproject"
+dependencies = [
+    "requests>=2.28",
+    "flask>=3.0",
+    "numpy",
+]

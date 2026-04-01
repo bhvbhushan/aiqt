@@ -1,0 +1,3 @@
+rules:
+  - this is an array not a map
+  - that should fail validation

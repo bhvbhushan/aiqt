@@ -1,0 +1,11 @@
+# Python dependencies
+requests>=2.25.0
+flask==2.0.1
+numpy
+pandas>=1.3.0,<2.0.0
+# Development tools
+pytest
+black>=22.0
+# This is a comment
+-e ./local-package
+django-rest-framework

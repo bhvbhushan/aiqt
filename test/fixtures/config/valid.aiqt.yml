@@ -1,0 +1,15 @@
+rules:
+  no-console:
+    severity: warning
+  no-eval:
+    severity: error
+  max-complexity:
+    severity: warning
+    threshold: 10
+
+ignore:
+  - node_modules/**
+  - dist/**
+  - "**/*.min.js"
+  - "**/*.d.ts"
+  - coverage/**
