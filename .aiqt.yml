@@ -1,6 +1,6 @@
 ignore:
-  - "node_modules/**"
-  - "dist/**"
+  - "**/node_modules/**"
+  - "**/dist/**"
   - "test/fixtures/**"
   - "**/*.d.ts"
   - "bun.lock"
@@ -8,3 +8,13 @@ ignore:
 rules:
   excessive-comment-ratio:
     threshold: 0.6
+
+  # Detector code is inherently complex (AST traversal) — default thresholds are too strict
+  god-function:
+    severity: warning
+
+  # Detector code contains the string patterns it detects — these self-matches are not bugs
+  n-plus-one-query:
+    severity: warning
+  placeholder-in-production:
+    severity: warning
