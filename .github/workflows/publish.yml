@@ -1,0 +1,88 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [package.json]
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install latest npm (OIDC requires >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Clear token-based auth for Trusted Publisher OIDC
+        run: |
+          npm config delete //registry.npmjs.org/:_authToken 2>/dev/null || true
+          echo "Cleared .npmrc token entry — npm will use OIDC via Trusted Publisher"
+
+      - name: Check if version is already published
+        id: version-check
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          PUBLISHED_VERSION=$(npm view aiqt version 2>/dev/null || echo "0.0.0")
+          if [ "$CURRENT_VERSION" = "$PUBLISHED_VERSION" ]; then
+            echo "Version $CURRENT_VERSION is already published. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "New version detected: $CURRENT_VERSION (published: $PUBLISHED_VERSION)"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.version-check.outputs.skip == 'false'
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        if: steps.version-check.outputs.skip == 'false'
+        run: bun run lint
+
+      - name: Typecheck
+        if: steps.version-check.outputs.skip == 'false'
+        run: bun run typecheck
+
+      - name: Test
+        if: steps.version-check.outputs.skip == 'false'
+        run: bun test
+
+      - name: Build CLI
+        if: steps.version-check.outputs.skip == 'false'
+        run: bun run build
+
+      - name: Build GitHub Action
+        if: steps.version-check.outputs.skip == 'false'
+        run: bun run build:action
+
+      - name: Publish to npm (Trusted Publisher via OIDC)
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --provenance --access public
+
+      - name: Create GitHub Release
+        if: steps.version-check.outputs.skip == 'false'
+        run: |
+          VERSION="${{ steps.version-check.outputs.current }}"
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --generate-notes \
+            --target "${{ github.sha }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

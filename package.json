@@ -11,7 +11,8 @@
     "build:action": "npx ncc build src/action/main.ts -o dist/action --source-map --license licenses.txt",
     "test": "bun test",
     "lint": "bunx biome check",
-    "typecheck": "bunx tsc --noEmit"
+    "typecheck": "bunx tsc --noEmit",
+    "prepublishOnly": "bun run lint && bun run typecheck && bun test && bun run build"
   },
   "files": [
     "dist",
@@ -23,12 +24,27 @@
     "ai",
     "code-quality",
     "ast",
-    "static-analysis"
+    "static-analysis",
+    "typescript",
+    "javascript",
+    "python",
+    "github-action",
+    "code-review",
+    "vibe-coding",
+    "ai-code-review",
+    "eslint",
+    "ast-grep",
+    "developer-tools"
   ],
+  "author": "Bhavya Bhushan (https://github.com/bhvbhushan)",
   "license": "MIT",
+  "homepage": "https://github.com/bhvbhushan/aiqt#readme",
+  "bugs": {
+    "url": "https://github.com/bhvbhushan/aiqt/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bhvbhushan/aiqt"
+    "url": "git+https://github.com/bhvbhushan/aiqt.git"
   },
   "engines": {
     "node": ">=20"
