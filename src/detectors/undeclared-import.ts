@@ -97,6 +97,7 @@ function isRelativeImport(specifier: string): boolean {
 
 function isNodeBuiltin(specifier: string): boolean {
   if (specifier.startsWith("node:")) return true;
+  if (specifier.startsWith("bun:")) return true;
   return NODE_BUILTINS.has(specifier);
 }
 
