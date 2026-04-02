@@ -42,7 +42,7 @@ aiqt scan . --config .aiqt.yml
 
 ## Benchmarks
 
-Tested against 10 popular open-source vibe-coded projects (April 2025). These are real results, not synthetic:
+Tested against 10 popular open-source vibe-coded projects (April 2026). These are real results, not synthetic:
 
 | Project | Stars | Files | Findings | Key Issues Found |
 |---------|:-----:|:-----:|:--------:|------------------|
@@ -198,7 +198,7 @@ pr-gate:
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--format` | Output format: `text`, `json`, `csv`, `html`, `sarif` | `text` |
+| `--format` | Output format: `text`, `json`, `html`, `sarif`, `github` | `text` |
 | `--config` | Path to config file | `.aiqt.yml` |
 | `--no-config` | Ignore config file | |
 | `--max-findings` | Maximum findings to report | `100` |
@@ -239,6 +239,18 @@ aiqt follows [Semantic Versioning](https://semver.org/):
 - [x] **Phase 2**: PR Gate GitHub Action, 15 new detectors (7 → 22), monorepo support, real-world validation
 - [ ] **Phase 3**: Cross-file analysis (duplicate code detection, repeated constants), npm publish
 - [ ] **Phase 4**: LLM-powered deep review mode (separation of concerns, semantic duplication)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code standards, and how to add new detectors.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
+## Code of Conduct
+
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
 
