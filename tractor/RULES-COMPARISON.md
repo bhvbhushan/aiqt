@@ -11,8 +11,8 @@ showing the dramatic reduction in complexity.
 | Validation / tests | 3,804 lines TypeScript (22 files) | ~56 lines YAML (inline in [rules.yaml](rules.yaml)) |
 | Comments / boilerplate | (included above) | ~36 lines |
 | **Total** | **7,667 lines across 44 files** | **302 lines in [1 file](rules.yaml)** |
-| Rules ported | 22 | 19 (incl. god-function via `--meta`, dead-code + trivial-assertion via text comparison) |
-| Rules not yet portable | — | 3 (+ 3 beyond AST scope) |
+| VibeCop detectors replaced | — | 11 of 22 (19 XPath rules in [rules.yaml](rules.yaml)) |
+| Not yet portable | — | 11 detectors (2 TSX bug, 3 beyond AST scope, 6 complex/heuristic) |
 
 Tractor's `expect-valid` / `expect-invalid` fields embed validation examples
 directly in the rule definition. VibeCop requires separate `*.test.ts` files with
@@ -52,21 +52,18 @@ entries serve as both documentation and automated tests.
 
 | # | VibeCop Rule | Category | Det. | Tests | Total | Blocker |
 |---|-------------|----------|------|-------|-------|---------|
-| 10 | ~~`god-function` (lines)~~ | quality | — | — | — | ~~Ported~~ — moved to row #5 via `--meta` |
-| 11 | `god-component` | quality | 128 | 196 | 324 | TSX/JSX parsing broken |
-| 12 | `unbounded-query` | quality | 146 | 91 | 237 | Negative check on chained calls |
-| 13 | `excessive-any` | quality | 89 | 163 | 252 | File-level counting (may work) |
-| 14 | `excessive-comment-ratio` | quality | 133 | 186 | 319 | Line counting |
-| 15 | ~~`dead-code-path`~~ | quality | 122 | 177 | 299 | ~~Ported~~ — moved to row #10 |
+| 12 | `god-component` | quality | 128 | 196 | 324 | TSX/JSX parsing broken ([tractor#67](https://github.com/boukeversteegh/tractor/issues/67)) |
+| 13 | `unbounded-query` | quality | 146 | 91 | 237 | Negative check on chained calls |
+| 14 | `excessive-any` | quality | 89 | 163 | 252 | File-level counting (may already work) |
+| 15 | `excessive-comment-ratio` | quality | 133 | 186 | 319 | Comment-to-code ratio heuristic |
 | 16 | `over-defensive-coding` | quality | 241 | 152 | 393 | Complex pair-check patterns |
-| 17 | `dangerous-inner-html` | security | 49 | 85 | 134 | TSX/JSX parsing broken |
+| 17 | `dangerous-inner-html` | security | 49 | 85 | 134 | TSX/JSX parsing broken ([tractor#67](https://github.com/boukeversteegh/tractor/issues/67)) |
 | 18 | `placeholder-in-production` | security | 71 | 135 | 206 | Many regex patterns (doable) |
 | 19 | `unchecked-db-result` | correctness | 154 | 157 | 311 | Parent context check |
 | 20 | `mixed-concerns` | correctness | 104 | 129 | 233 | File-level import analysis |
 | 21 | `undeclared-import` | correctness | 563 | 284 | 847 | Needs package.json cross-reference |
-| 22 | ~~`trivial-assertion`~~ | testing | 261 | 242 | 503 | ~~Ported~~ — moved to row #11 |
-| 23 | `over-mocking` | testing | 159 | 212 | 371 | Counting comparison |
-| | **Not ported total** | | **2,220** | **2,209** | **4,429** | |
+| 22 | `over-mocking` | testing | 159 | 212 | 371 | Counting comparison |
+| | **Not ported total** | | **1,837** | **1,790** | **3,627** | |
 
 ### Potentially Portable (with Tractor improvements)
 
@@ -101,20 +98,20 @@ VibeCop (ast-grep):
 Tractor (XPath):
   Rules + tests: 302 lines YAML (1 file)
   ────────────────────────────────────
-  Coverage:      19 rules (~86% of VibeCop's detectors)
+  Coverage:      11 of 22 detectors (19 XPath rules)
 
 Ported subset only:
-  VibeCop:  4,040 lines (detectors + tests)
+  VibeCop:  4,040 lines (detectors + tests for the 11 ported detectors)
   Tractor:    302 lines (rules + inline tests + comments)
   Ratio:      13x reduction
 ```
 
-### What blocks the remaining ~14%
+### What blocks the remaining 11 detectors
 
-1. **TSX/JSX parsing** (2 rules) — Tractor bug, fix would unlock them
-2. **Cross-file/project context** (3 rules) — fundamentally beyond AST scope
-3. **Complex structural patterns** (1 rule) — possible but needs more XPath work
+1. **TSX/JSX parsing** (2 detectors) — Tractor bug ([tractor#67](https://github.com/boukeversteegh/tractor/issues/67)), fix would unlock them
+2. **Cross-file/project context** (3 detectors) — fundamentally beyond pure AST scope (`undeclared-import`, `mixed-concerns`, `over-mocking`)
+3. **Complex heuristics** (6 detectors) — file-level counting, regex patterns, pair-check logic; some may be expressible with more XPath work
 
-Once TSX parsing is fixed, Tractor would cover **~95% of VibeCop's AST-based rules**,
-with only the 3 cross-file rules (`undeclared-import`, `mixed-concerns`, `over-mocking`)
-requiring custom code.
+Once TSX parsing is fixed, Tractor would cover **13 of 22 detectors** (~60%).
+The remaining 9 need either cross-file analysis (3) or complex heuristics (6)
+that may or may not be expressible in XPath.
