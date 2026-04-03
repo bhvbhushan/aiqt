@@ -234,7 +234,7 @@ function main(): void {
     .argument("[path]", "Directory to scan", ".")
     .option(
       "-f, --format <format>",
-      "Output format (text, json, github, sarif, html)",
+      "Output format (text, json, github, sarif, html, agent)",
       "text",
     )
     .option("-c, --config <path>", "Path to config file")
@@ -256,7 +256,7 @@ function main(): void {
     .argument("<file>", "File to check")
     .option(
       "-f, --format <format>",
-      "Output format (text, json, github, sarif, html)",
+      "Output format (text, json, github, sarif, html, agent)",
       "text",
     )
     .option(
