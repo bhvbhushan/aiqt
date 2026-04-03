@@ -212,7 +212,7 @@ AST nodes) while VibeCop's regex approach can false-positive on comments and str
 
 #### 1. TSX/JSX Parsing is Broken
 
-**Tracking: No existing issue or todo — [needs new issue](#new-issues-to-file)**
+**Tracking: [boukeversteegh/tractor#67](https://github.com/boukeversteegh/tractor/issues/67)**
 
 **Severity: Blocker for React codebases**
 
@@ -286,7 +286,7 @@ usability burden.
 
 #### 4. Unknown YAML Keys Are Silently Ignored in `--rules`
 
-**Tracking: No existing issue — [needs new issue](#new-issues-to-file)**
+**Tracking: [boukeversteegh/tractor#68](https://github.com/boukeversteegh/tractor/issues/68)**
 
 **Severity: Footgun**
 
@@ -450,7 +450,7 @@ the full picture.
 
 #### 12. `--rules` YAML Format Undocumented
 
-**Tracking: No existing issue — [needs new issue](#new-issues-to-file)**
+**Tracking: [boukeversteegh/tractor#69](https://github.com/boukeversteegh/tractor/issues/69)**
 
 **Severity: Medium**
 
@@ -470,7 +470,7 @@ it in a rules authoring guide.
 
 #### 13. Discovering Tree Node Names is Trial-and-Error
 
-**Tracking: Partially addressed by `-v schema` — discoverability could improve**
+**Tracking: [boukeversteegh/tractor#70](https://github.com/boukeversteegh/tractor/issues/70)**
 
 **Severity: Low**
 
@@ -552,36 +552,23 @@ or similar to distinguish "tractor failed" from "tractor found problems".
 The following feedback items have no corresponding issue or todo in the Tractor
 repository and should be filed as GitHub issues:
 
-### 1. TSX/JSX parsing broken — JSX elements parsed as type assertions
-- **Labels**: bug, language-support
-- **Ref**: Feedback #1 above
-- **Summary**: `tractor -l tsx` misparses JSX elements like `<div className="test">` as TypeScript type assertions (`<type_arguments>`). This blocks all React/JSX-specific linting rules.
-- **Repro**: `echo 'const x = <div className="test">hello</div>;' | tractor -l tsx`
+### 1. ~~TSX/JSX parsing broken~~ → Filed as [boukeversteegh/tractor#67](https://github.com/boukeversteegh/tractor/issues/67)
 
 ### ~~2. `tractor run` hangs when config references file globs~~ — LIKELY USER ERROR
 Caused by placing config in `/tmp`, so globs resolved relative to `/tmp` instead
 of the project directory. Already tracked in [todo/20](https://github.com/boukeversteegh/tractor/blob/main/todo/20-glob-path-resolution-in-configs.md)
 (warn on 0-match globs, document path resolution).
 
-### 3. Unknown YAML keys silently ignored in `check --rules`
-- **Labels**: bug, dx
-- **Ref**: Feedback #4 above
-- **Summary**: Writing `expect-valid:` instead of `expect: [{valid: ...}]` in a `--rules` YAML file produces no error — the keys are silently ignored. Serde's `deny_unknown_fields` or a custom warning would catch this.
+### 3. ~~Unknown YAML keys silently ignored~~ → Filed as [boukeversteegh/tractor#68](https://github.com/boukeversteegh/tractor/issues/68)
 
 ### 4. Feature: line-count / span-count XPath function for linting
 - **Labels**: enhancement, xpath
 - **Ref**: Feedback #5 above
 - **Summary**: No way to count source lines within a matched node. `//function[line-count(body) > 50]` would unlock "god function" detection and similar size-based rules. This is the #1 missing feature for using tractor as a linting backend.
 
-### 5. Document `check --rules` YAML format
-- **Labels**: documentation
-- **Ref**: Feedback #12 above
-- **Summary**: The `--rules` flag accepts a YAML file but the expected format (`rules: [{id, xpath, reason, severity, language, expect}]`) is not documented in `--help` or anywhere else. Discovery is entirely through error messages and trial-and-error.
+### 5. ~~Document `check --rules` YAML format~~ → Filed as [boukeversteegh/tractor#69](https://github.com/boukeversteegh/tractor/issues/69)
 
 ### ~~6. Feature: `--exclude` glob for `tractor check`~~ — NOT NEEDED
 Already supported via `exclude:` in the `--rules` YAML (both top-level and per-rule). See feedback #14.
 
-### 7. DX: make `-v schema` more discoverable for rule authoring
-- **Labels**: enhancement, dx
-- **Ref**: Feedback #13 above
-- **Summary**: `-v schema` (without `-x`) is the right tool for discovering element names when writing rules, but it's easy to miss. Suggest highlighting it in the `--help` workflow section as the recommended first step. Optionally, a per-language reference page would help rule authors who want a quick lookup without running tractor on their own code.
+### 7. ~~DX: make `-v schema` more discoverable~~ → Filed as [boukeversteegh/tractor#70](https://github.com/boukeversteegh/tractor/issues/70)
