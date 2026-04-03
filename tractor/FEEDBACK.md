@@ -473,23 +473,26 @@ it in a rules authoring guide.
 
 #### 13. Discovering Tree Node Names is Trial-and-Error
 
-**Tracking: No existing issue — [needs new issue](#new-issues-to-file)**
+**Tracking: Partially addressed by `-v schema` — discoverability could improve**
 
 **Severity: Low**
 
 Writing XPath rules requires knowing the exact element names in Tractor's semantic
-tree. Currently the workflow is:
+tree. During this experiment, I fell into a workflow of running `tractor file.ts`
+to see the full XML tree and manually reading it for element names. Only later did
+I realize that `tractor file.ts -v schema` (without `-x`) gives a compact structural
+overview of all element types in the file — which is actually what I needed.
 
-1. Write example code to a temp file
-2. Run `tractor file.ts` to see the tree
-3. Read the XML to find element names
-4. Write the XPath
-5. Test and iterate
+The `-v schema` view is the right answer here, but it wasn't obvious to reach for.
+A couple of things that could help discoverability:
 
-The `-v schema` view helps, but only for already-matched nodes. A searchable
-reference of "all element names for language X" would be valuable.
-
-**Suggestion**: `tractor --list-elements typescript` or a web reference.
+- Mention `-v schema` in the workflow section of `--help` as the recommended first
+  step when writing rules (it's currently listed as an option but not highlighted
+  in the workflow)
+- A per-language reference page (web docs or `tractor schema --lang typescript`)
+  showing the canonical element names across a representative code sample would
+  still be useful for rule authors who want a quick reference without having
+  their own codebase handy
 
 #### 14. No Way to Exclude Files in `check --rules`
 
@@ -572,7 +575,7 @@ repository and should be filed as GitHub issues:
 - **Ref**: Feedback #14 above, related to [boukeversteegh/tractor#53](https://github.com/boukeversteegh/tractor/issues/53)
 - **Summary**: `tractor check` has no way to exclude files (test files, generated code, vendor dirs). The `run` config has `exclude:` but `check --rules` doesn't. Add `--exclude` CLI flag or support `exclude:` in the rules YAML.
 
-### 7. Feature: list available element names per language
+### 7. DX: make `-v schema` more discoverable for rule authoring
 - **Labels**: enhancement, dx
 - **Ref**: Feedback #13 above
-- **Summary**: Writing XPath rules requires knowing element names, but there's no reference. `tractor --list-elements typescript` or a documentation page showing all semantic tree elements for each language would dramatically speed up rule authoring.
+- **Summary**: `-v schema` (without `-x`) is the right tool for discovering element names when writing rules, but it's easy to miss. Suggest highlighting it in the `--help` workflow section as the recommended first step. Optionally, a per-language reference page would help rule authors who want a quick lookup without running tractor on their own code.
