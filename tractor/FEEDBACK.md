@@ -360,23 +360,27 @@ This actually might already work? I didn't test it because the tree element name
 for all these constructs weren't obvious. **A "complexity()" helper function** or
 documentation of standard branching node names across languages would be very useful.
 
-#### 7. Node Text Equality Comparison Between Siblings
+#### 7. ~~Node Text Equality Comparison Between Siblings~~ — WORKS
 
-**Tracking: No existing issue — [needs new issue](#new-issues-to-file)**
+**Status: Already works! I assumed it wouldn't and never tested it.**
 
-**Severity: Medium**
+XPath's `=` operator compares string values of nodes, which is exactly what's needed.
+The only subtlety is navigating to the right depth to avoid structural wrapper
+differences (e.g. the `else` keyword being part of the `alternative` node):
 
-VibeCop's `dead-code-path` detector compares if/else branch contents to detect
-identical branches. VibeCop's `trivial-assertion` compares `expect(X).toBe(X)`
-where both X are the same literal.
-
-Desired:
 ```xpath
-//if_statement[body = else/body]
+(: Dead code path: identical if/else branches :)
+//if[consequence/block = alternative/else/block]
+
+(: Trivial assertion: expect(X).toBe(X) :)
+//call[function/member/property='toBe'][
+  arguments/arguments = function/member/object/call/arguments/arguments
+]
 ```
 
-This kind of "match two subtrees by text content" is common in linting but tricky
-in pure XPath.
+Both of these work correctly — the first matches only when branches are identical,
+the second matches only when the expect argument equals the toBe argument.
+Two more rules ported that I thought were impossible.
 
 #### 8. Parent/Ancestor Axis for Context Checks
 
@@ -549,7 +553,7 @@ or similar to distinguish "tractor failed" from "tractor found problems".
 | P1 | Unknown YAML keys silently ignored | [tractor#68](https://github.com/boukeversteegh/tractor/issues/68) | All rules (correctness) |
 | P1 | Glob path resolution: warn on 0 matches | [tractor#72](https://github.com/boukeversteegh/tractor/issues/72) | Usability |
 | P2 | TS tree: overloaded `<type>`, unclear `<ref/>` | [tractor#73](https://github.com/boukeversteegh/tractor/issues/73) | All rules (authoring speed) |
-| P2 | Node text comparison | — | `dead-code-path`, `trivial-assertion` |
+| ~~P2~~ | ~~Node text comparison~~ | — | Already works — ported `dead-code-path` + `trivial-assertion` |
 | P2 | Per-file aggregation docs | — | `excessive-any`, `over-mocking` |
 | P3 | Make `-v schema` more discoverable | [tractor#70](https://github.com/boukeversteegh/tractor/issues/70) | All rules (authoring speed) |
 

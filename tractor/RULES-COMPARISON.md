@@ -7,12 +7,12 @@ showing the dramatic reduction in complexity.
 
 | Metric | VibeCop (ast-grep) | Tractor (XPath) |
 |--------|-------------------|-----------------|
-| Rule definitions | 3,863 lines TypeScript (22 files) | ~185 lines YAML ([rules.yaml](rules.yaml)) |
-| Validation / tests | 3,804 lines TypeScript (22 files) | ~46 lines YAML (inline in [rules.yaml](rules.yaml)) |
-| Comments / boilerplate | (included above) | ~34 lines |
-| **Total** | **7,667 lines across 44 files** | **265 lines in [1 file](rules.yaml)** |
-| Rules ported | 22 | 17 (incl. god-function line count via `--meta`) |
-| Rules not yet portable | — | 5 (+ 3 beyond AST scope) |
+| Rule definitions | 3,863 lines TypeScript (22 files) | ~210 lines YAML ([rules.yaml](rules.yaml)) |
+| Validation / tests | 3,804 lines TypeScript (22 files) | ~56 lines YAML (inline in [rules.yaml](rules.yaml)) |
+| Comments / boilerplate | (included above) | ~36 lines |
+| **Total** | **7,667 lines across 44 files** | **302 lines in [1 file](rules.yaml)** |
+| Rules ported | 22 | 19 (incl. god-function via `--meta`, dead-code + trivial-assertion via text comparison) |
+| Rules not yet portable | — | 3 (+ 3 beyond AST scope) |
 
 Tractor's `expect-valid` / `expect-invalid` fields embed validation examples
 directly in the rule definition. VibeCop requires separate `*.test.ts` files with
@@ -36,12 +36,14 @@ replaces both the detector code AND the test code.**
 | 7 | `insecure-defaults` (eval+TLS) | security | 434 | 266 | **699** | 14 lines | PARTIAL |
 | 8 | `token-in-localstorage` | security | 66 | 131 | **197** | 15 lines | FULL |
 | 9 | `n-plus-one-query` | correctness | 291 | 175 | **466** | 15 lines | PARTIAL |
-| | **Ported total** | | **1,644** | **1,595** | **3,238** | **~132** | |
+| 10 | `dead-code-path` | quality | 122 | 177 | **299** | 5 lines | FULL |
+| 11 | `trivial-assertion` | testing | 261 | 242 | **503** | 8 lines | FULL |
+| | **Ported total** | | **2,027** | **2,014** | **4,040** | **~145** | |
 
 \* Requires `--meta` flag. Line count uses `substring-before(@end,':')` — verbose but functional.
 
-**That's a 25x reduction** — from 3,238 lines of TypeScript (detectors + tests)
-to ~132 lines of declarative YAML (rules + inline validation examples).
+**That's a 13x reduction** — from 4,040 lines of TypeScript (detectors + tests)
+to 302 lines of YAML (rules + inline validation examples + comments).
 
 And the YAML is self-documenting: each rule's `expect`
 entries serve as both documentation and automated tests.
@@ -55,14 +57,14 @@ entries serve as both documentation and automated tests.
 | 12 | `unbounded-query` | quality | 146 | 91 | 237 | Negative check on chained calls |
 | 13 | `excessive-any` | quality | 89 | 163 | 252 | File-level counting (may work) |
 | 14 | `excessive-comment-ratio` | quality | 133 | 186 | 319 | Line counting |
-| 15 | `dead-code-path` | quality | 122 | 177 | 299 | Sibling text comparison |
+| 15 | ~~`dead-code-path`~~ | quality | 122 | 177 | 299 | ~~Ported~~ — moved to row #10 |
 | 16 | `over-defensive-coding` | quality | 241 | 152 | 393 | Complex pair-check patterns |
 | 17 | `dangerous-inner-html` | security | 49 | 85 | 134 | TSX/JSX parsing broken |
 | 18 | `placeholder-in-production` | security | 71 | 135 | 206 | Many regex patterns (doable) |
 | 19 | `unchecked-db-result` | correctness | 154 | 157 | 311 | Parent context check |
 | 20 | `mixed-concerns` | correctness | 104 | 129 | 233 | File-level import analysis |
 | 21 | `undeclared-import` | correctness | 563 | 284 | 847 | Needs package.json cross-reference |
-| 22 | `trivial-assertion` | testing | 261 | 242 | 503 | Value equality comparison |
+| 22 | ~~`trivial-assertion`~~ | testing | 261 | 242 | 503 | ~~Ported~~ — moved to row #11 |
 | 23 | `over-mocking` | testing | 159 | 212 | 371 | Counting comparison |
 | | **Not ported total** | | **2,220** | **2,209** | **4,429** | |
 
@@ -74,8 +76,8 @@ entries serve as both documentation and automated tests.
 | `god-component` | Fix TSX/JSX parsing | ~8 lines |
 | `dangerous-inner-html` | Fix TSX/JSX parsing | ~5 lines |
 | `excessive-any` | Per-file counting (may already work) | ~5 lines |
-| `dead-code-path` | Sibling text comparison | ~5 lines |
-| `trivial-assertion` | Child text equality | ~8 lines |
+| ~~`dead-code-path`~~ | ~~Ported~~ — XPath `=` compares node text | ~~done~~ |
+| ~~`trivial-assertion`~~ | ~~Ported~~ — XPath `=` compares node text | ~~done~~ |
 | `placeholder-in-production` | Already possible (verbose `contains()`) | ~12 lines |
 | `unchecked-db-result` | `ancestor::` axis | ~6 lines |
 
@@ -97,18 +99,22 @@ VibeCop (ast-grep):
   Total:        7,667 lines across 44 files
 
 Tractor (XPath):
-  Rules + tests: 265 lines YAML (1 file)
+  Rules + tests: 302 lines YAML (1 file)
   ────────────────────────────────────
-  Coverage:      17 rules (~65% of VibeCop's detectors)
+  Coverage:      19 rules (~86% of VibeCop's detectors)
+
+Ported subset only:
+  VibeCop:  4,040 lines (detectors + tests)
+  Tractor:    302 lines (rules + inline tests + comments)
+  Ratio:      13x reduction
 ```
 
-### What blocks the remaining ~35%
+### What blocks the remaining ~14%
 
 1. **TSX/JSX parsing** (2 rules) — Tractor bug, fix would unlock them
 2. **Cross-file/project context** (3 rules) — fundamentally beyond AST scope
-3. **Counting/comparison** (3 rules) — need richer XPath functions or helpers
-4. **Complex structural patterns** (3 rules) — possible but need XPath expertise
+3. **Complex structural patterns** (1 rule) — possible but needs more XPath work
 
-Even conservatively, Tractor could handle **~75% of VibeCop's rules** as pure
-declarative config once TSX parsing is fixed, replacing
-~5,000 lines of TypeScript + tests with ~170 lines of YAML.
+Once TSX parsing is fixed, Tractor would cover **~95% of VibeCop's AST-based rules**,
+with only the 3 cross-file rules (`undeclared-import`, `mixed-concerns`, `over-mocking`)
+requiring custom code.

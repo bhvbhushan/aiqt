@@ -263,3 +263,40 @@ rules:
     expect:
       - valid: "items.map((item) => item.name)"
       - invalid: "items.map(async (item) => { await db.create(item); })"
+
+  # ===========================================================================
+  # QUALITY (structural comparison)
+  # ===========================================================================
+
+  # [FULL] dead-code-path: identical if/else branches
+  # Replaces: src/detectors/dead-code-path.ts (122 lines)
+  - id: dead-code-identical-branches
+    xpath: "//if[consequence/block = alternative/else/block]"
+    reason: "If/else branches are identical — the condition has no effect."
+    severity: warning
+    language: typescript
+    expect:
+      - valid: "if (x) { doA(); } else { doB(); }"
+      - invalid: "if (x) { doSame(); } else { doSame(); }"
+
+  # ===========================================================================
+  # TESTING
+  # ===========================================================================
+
+  # [FULL] trivial-assertion: expect(X).toBe(X) with identical arguments
+  # Replaces: src/detectors/trivial-assertion.ts (261 lines)
+  - id: trivial-assertion
+    xpath: >-
+      //call[
+        function/member/property='toBe' or function/member/property='toEqual'
+      ][
+        arguments/arguments = function/member/object/call/arguments/arguments
+      ]
+    reason: "Trivial assertion — expect(X).toBe(X) always passes. Test actual behavior instead."
+    severity: warning
+    language: typescript
+    expect:
+      - valid: "expect(result).toBe(true)"
+      - valid: "expect(1).toBe(2)"
+      - invalid: "expect(true).toBe(true)"
+      - invalid: "expect(1).toBe(1)"
