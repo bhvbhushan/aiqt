@@ -1,6 +1,6 @@
 {
   "name": "vibecop",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "AI code quality toolkit — deterministic linter for the AI coding era",
   "type": "module",
   "bin": {
@@ -55,6 +55,7 @@
     "@ast-grep/napi": "^0.42.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^13.1.0",
+    "vibecop": "^0.3.0",
     "yaml": "^2.7.1",
     "zod": "^3.24.4"
   },
@@ -83,7 +84,10 @@
       {
         "name": "vibecop",
         "owner": "vibecop",
-        "fileLocation": ["relative", "${workspaceFolder}"],
+        "fileLocation": [
+          "relative",
+          "${workspaceFolder}"
+        ],
         "pattern": {
           "regexp": "^(.+):(\\d+):(\\d+):\\s+(error|warning|info)\\s+(.+)\\s+\\[(.+)\\]$",
           "file": 1,
