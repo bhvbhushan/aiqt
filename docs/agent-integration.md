@@ -204,6 +204,45 @@ After every code edit, run `npx vibecop scan --diff HEAD --format agent` and fix
 
 Or copy from [`examples/cline/`](../examples/cline/).
 
+## Tier 3 Tools — MCP Server
+
+These tools connect to vibecop via the Model Context Protocol (MCP). The agent calls vibecop tools directly through the MCP interface.
+
+### Setup
+
+Start the vibecop MCP server:
+
+```bash
+npx vibecop serve
+```
+
+Then configure your MCP client to connect to it via stdio. Example MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "vibecop": {
+      "command": "npx",
+      "args": ["vibecop", "serve"]
+    }
+  }
+}
+```
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `vibecop_scan` | Scan a directory for AI code quality issues |
+| `vibecop_check` | Check a single file for issues |
+| `vibecop_explain` | Explain what a detector checks for |
+
+### Compatible Tools
+
+- [Continue.dev](https://continue.dev/) — Add to `.continue/config.json`
+- [Amazon Q](https://aws.amazon.com/q/) — MCP server support
+- [Zed](https://zed.dev/) — Add to Zed MCP settings
+
 ## Troubleshooting
 
 ### vibecop not found

@@ -1,7 +1,7 @@
 # vibecop — AI Code Quality Toolkit: Design & Implementation Plan
 
 **Date:** 2026-04-03
-**Status:** Engineering Review Complete / Ready for Implementation | v0.2 Implementation Complete
+**Status:** Engineering Review Complete / Ready for Implementation | v0.2 Implementation Complete | v0.4.0 MCP Server Complete
 
 ---
 
@@ -113,6 +113,9 @@ vibecop/                        ← single npm package
 │   │   ├── insecure-defaults.ts
 │   │   ├── over-mocking.ts
 │   │   └── ... (21 additional detectors)
+│   ├── mcp/                    ← MCP server (v0.4.0)
+│   │   ├── index.ts            ← MCP module entry point
+│   │   └── server.ts           ← stdio MCP server: vibecop_scan, vibecop_check, vibecop_explain
 │   ├── data/
 │   │   └── known-packages.json ← Bundled npm allowlist for hallucinated-package detection
 │   └── types.ts                ← Detector, DetectionContext, Finding, ProjectInfo, etc.
@@ -213,7 +216,7 @@ CLI args
 
 ---
 
-## CLI Commands (v0.2)
+## CLI Commands (v0.4)
 
 ```
 vibecop scan [path]
@@ -234,6 +237,10 @@ vibecop check <file>
 
 vibecop init
   # Auto-detect AI coding tools and generate integration configs
+
+vibecop serve
+  # Start MCP server (stdio transport)
+  # Exposes vibecop_scan, vibecop_check, vibecop_explain tools
 ```
 
 ---
@@ -342,14 +349,14 @@ VS Code problem matcher pattern will be included in `package.json` for terminal 
 
 ---
 
-## Agent Integration Architecture (v0.2)
+## Agent Integration Architecture (v0.4)
 
-vibecop integrates with 7+ AI coding tools across 3 tiers:
+vibecop integrates with 10+ AI coding tools across 3 tiers:
 
 ```
 TIER 1 — Deterministic hooks: Claude Code, Cursor, Codex CLI, Aider
 TIER 2 — LLM-mediated instructions: GitHub Copilot, Windsurf, Cline
-TIER 3 — MCP tools (deferred to v0.3): Continue.dev, Amazon Q, Zed
+TIER 3 — MCP server (v0.4.0): Continue.dev, Amazon Q, Zed
 ```
 
 Data flow:
@@ -399,7 +406,7 @@ The following are explicitly deferred:
 - **Monorepo package structure** (`@vibecop/cli`, `@vibecop/core`, etc.)
 - **YAML rule format** — detectors are TypeScript-only
 - **Test Quality Evaluator** — Phase 3
-- **MCP server** — deferred to v0.3 (Continue.dev, Amazon Q, Zed)
+- **MCP server** — implemented in v0.4.0 (`vibecop serve`, stdio transport, 3 tools)
 - **VS Code LSP integration**
 - **Deferred detectors:** unhandled-tool-exec, llm-no-structured-output, copy-paste-duplication, tautological-test, over-abstraction, buzzword-comments
 - **SpecDetect4AI Python ML smells**
@@ -436,6 +443,13 @@ The following are explicitly deferred:
 - `makeFinding`/`makeLineFinding` DRY refactor in `src/detectors/utils.ts`
 - Control benchmarks: precision/recall measured against labeled test suite
 - SpecDetect4LLM mapping: UMM, NMVP, NSM, TNES implemented; NSO deferred
+
+### Phase 3.5: MCP Server — v0.4.0
+
+- `vibecop serve` command: stdio-based MCP server via `@modelcontextprotocol/sdk`
+- 3 MCP tools: `vibecop_scan` (directory scan), `vibecop_check` (single file), `vibecop_explain` (detector docs)
+- Engine API cleanup: exported `scan()` and `checkFile()` from `engine.ts`
+- Compatible with Continue.dev, Amazon Q, Zed, and any MCP-capable client
 
 ### Phase 3: Test Quality Evaluator
 
