@@ -1,6 +1,6 @@
 {
   "name": "vibecop",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AI code quality toolkit — deterministic linter for the AI coding era",
   "type": "module",
   "bin": {
@@ -12,7 +12,8 @@
     "test": "bun test",
     "lint": "bunx biome check",
     "typecheck": "bunx tsc --noEmit",
-    "prepublishOnly": "bun run lint && bun run typecheck && bun test && bun run build"
+    "test:install": "bash scripts/test-install.sh",
+    "prepublishOnly": "bun run lint && bun run typecheck && bun test && bun run build && bun run test:install"
   },
   "files": [
     "dist/cli.js",
@@ -55,6 +56,17 @@
     "commander": "^13.1.0",
     "yaml": "^2.7.1",
     "zod": "^3.24.4"
+  },
+  "optionalDependencies": {
+    "@ast-grep/napi-darwin-arm64": "^0.42.0",
+    "@ast-grep/napi-darwin-x64": "^0.42.0",
+    "@ast-grep/napi-linux-x64-gnu": "^0.42.0",
+    "@ast-grep/napi-linux-x64-musl": "^0.42.0",
+    "@ast-grep/napi-linux-arm64-gnu": "^0.42.0",
+    "@ast-grep/napi-linux-arm64-musl": "^0.42.0",
+    "@ast-grep/napi-win32-x64-msvc": "^0.42.0",
+    "@ast-grep/napi-win32-arm64-msvc": "^0.42.0",
+    "@ast-grep/napi-win32-ia32-msvc": "^0.42.0"
   },
   "devDependencies": {
     "@actions/core": "^3.0.0",
