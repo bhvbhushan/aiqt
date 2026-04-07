@@ -22,21 +22,26 @@ src/
   cli.ts              # CLI entry point (commander)
   config.ts           # Config loading + Zod validation
   engine.ts           # File discovery, AST parsing, detector orchestration
+  ast-utils.ts        # Shared AST traversal (findImports, findFunctions, findClasses, findExports)
+  context.ts          # Context optimization entry point (hook handlers, requires bun)
+  context/
+    benchmark.ts       # Benchmark command (pure ast-grep, no bun:sqlite — runs under node)
+    cache.ts           # SQLite persistence (bun:sqlite, WAL mode)
+    session.ts         # File hashing, token estimation, extension checks
+    skeleton.ts        # AST skeleton extraction from source code
+    stats.ts           # Token savings reporting
   project.ts          # Package manifest parsing (dependencies, devDependencies)
   types.ts            # All shared types (Detector, Finding, DetectionContext, etc.)
+  init.ts             # Agent tool detection + config generation (vibecop init)
   detectors/
     index.ts           # builtinDetectors array — register new detectors here
-    empty-error-handler.ts
-    god-function.ts
-    sql-injection.ts
-    ...                # 22 detectors total
+    utils.ts           # Detector-specific helpers (makeFinding, test function detection)
+    ...                # 35 detectors across quality, security, correctness, testing
   formatters/
-    index.ts           # Formatter registry
-    text.ts            # Default human-readable output
-    json.ts            # JSON output
-    html.ts            # HTML report
-    sarif.ts           # SARIF for IDE/CI integration
-    github.ts          # GitHub Actions annotations
+    index.ts           # Formatter registry (text, json, html, sarif, github, agent, gcc)
+  mcp/
+    index.ts           # MCP server setup + tool registration
+    server.ts          # Tool handlers (scan, check, explain, context_benchmark)
   action/
     main.ts            # GitHub Action entry point
     diff.ts            # PR diff parsing
@@ -46,11 +51,10 @@ src/
 test/
   detectors/           # One test file per detector
   formatters/          # Formatter tests
+  context/             # Context optimization tests (skeleton, cache, integration)
+  mcp/                 # MCP server tests
   fixtures/            # Sample source files for testing
-  cli.test.ts
-  config.test.ts
-  engine.test.ts
-  project.test.ts
+  ast-utils.test.ts    # Shared AST utility tests
 ```
 
 ## How to Contribute
@@ -140,10 +144,11 @@ Add the detector to the README detector table with its id, name, category, and s
 Run all checks locally:
 
 ```bash
-bun run lint        # Biome linter — fix all errors
-bun run typecheck   # TypeScript strict — no type errors
-bun test            # All tests must pass
-bun run build       # Build must succeed
+bun run lint           # Biome linter — fix all errors
+bun run typecheck      # TypeScript strict — no type errors
+bun test               # All tests must pass
+bun run build          # CLI build must succeed
+bun run build:context  # Context optimization build must succeed
 ```
 
 ## Review Process

@@ -95,10 +95,16 @@ vibecop check src/auth.ts --format json
 Auto-detect AI coding tools and generate integration config files.
 
 ```bash
-vibecop init
+vibecop init [--context]
 ```
 
-No arguments or options. Detects tools by checking for:
+**Options:**
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--context` | Enable context optimization hooks (requires bun) | `false` |
+
+Detects tools by checking for:
 
 - `.claude/` directory (Claude Code)
 - `.cursor/` directory (Cursor)
@@ -118,7 +124,34 @@ Start the MCP server on stdio transport.
 vibecop serve
 ```
 
-No arguments or options. The server exposes three tools (`vibecop_scan`, `vibecop_check`, `vibecop_explain`) via the Model Context Protocol. See [MCP Server](/vibecop/agent-integration/mcp-server/) for client configuration.
+No arguments or options. The server exposes four tools (`vibecop_scan`, `vibecop_check`, `vibecop_explain`, `vibecop_context_benchmark`) via the Model Context Protocol. See [MCP Server](/vibecop/agent-integration/mcp-server/) for client configuration.
+
+### vibecop context
+
+Context optimization commands.
+
+```bash
+vibecop context [benchmark|stats]
+```
+
+**Subcommands:**
+
+| Subcommand | Description | Requires bun |
+|------------|-------------|:------------:|
+| `benchmark` | Show projected token savings for the current project | No |
+| `stats` | Show actual token savings from past sessions | Yes |
+
+**Examples:**
+
+```bash
+# See projected savings (runs under node, no bun needed)
+vibecop context benchmark
+
+# View actual savings after sessions (requires bun for SQLite)
+vibecop context stats
+```
+
+The `benchmark` command scans all supported files, extracts AST skeletons, and projects token savings at 20%, 40%, and 60% re-read rates. The `stats` command reads from the SQLite database populated by the context optimization hooks.
 
 ### vibecop test-rules
 

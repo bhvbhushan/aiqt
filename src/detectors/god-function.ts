@@ -1,4 +1,5 @@
 import type { SgNode } from "@ast-grep/napi";
+import { findFunctions } from "../ast-utils.js";
 import type { Detector, DetectionContext, Finding } from "../types.js";
 import { makeLineFinding } from "./utils.js";
 
@@ -74,74 +75,6 @@ function countComplexity(node: SgNode, isPython: boolean): number {
   return count;
 }
 
-/** Count formal parameters for a JS/TS function node */
-function countJsParams(funcNode: SgNode): number {
-  const params = funcNode.children().find(
-    ch => ch.kind() === "formal_parameters",
-  );
-  if (!params) return 0;
-
-  return params.children().filter(ch => {
-    const k = ch.kind();
-    return k !== "(" && k !== ")" && k !== ",";
-  }).length;
-}
-
-/** Count parameters for a Python function node */
-function countPyParams(funcNode: SgNode): number {
-  const params = funcNode.children().find(
-    ch => ch.kind() === "parameters",
-  );
-  if (!params) return 0;
-
-  const paramNodes = params.children().filter(ch => {
-    const k = ch.kind();
-    return k !== "(" && k !== ")" && k !== ",";
-  });
-
-  // Exclude `self` and `cls` as they are implicit
-  return paramNodes.filter(ch => {
-    const text = ch.text().split(":")[0].split("=")[0].trim();
-    return text !== "self" && text !== "cls";
-  }).length;
-}
-
-/** Get function name from a JS/TS function node or its parent context */
-function getJsFunctionName(node: SgNode): string {
-  const kind = node.kind();
-
-  if (kind === "function_declaration") {
-    const nameNode = node.children().find(ch => ch.kind() === "identifier");
-    return nameNode?.text() ?? "<anonymous>";
-  }
-
-  if (kind === "method_definition") {
-    const nameNode = node.children().find(
-      ch => ch.kind() === "property_identifier" || ch.kind() === "identifier",
-    );
-    return nameNode?.text() ?? "<anonymous>";
-  }
-
-  if (kind === "arrow_function") {
-    // Walk up to find variable_declarator parent
-    const parent = node.parent();
-    if (parent?.kind() === "variable_declarator") {
-      const nameNode = parent.children().find(ch => ch.kind() === "identifier");
-      return nameNode?.text() ?? "<anonymous>";
-    }
-    // Property assignment: { key: () => {} }
-    if (parent?.kind() === "pair") {
-      const nameNode = parent.children().find(
-        ch => ch.kind() === "property_identifier" || ch.kind() === "string",
-      );
-      return nameNode?.text() ?? "<anonymous>";
-    }
-    return "<anonymous>";
-  }
-
-  return "<anonymous>";
-}
-
 function buildFinding(
   ctx: DetectionContext,
   m: FunctionMetrics,
@@ -168,17 +101,15 @@ function detectJavaScript(ctx: DetectionContext): Finding[] {
   const maxComplexity = (ctx.config as Record<string, unknown>)?.maxComplexity as number ?? 15;
   const maxParams = (ctx.config as Record<string, unknown>)?.maxParams as number ?? 5;
 
-  const funcKinds = ["function_declaration", "method_definition", "arrow_function"];
+  const allFunctions = findFunctions(root, ctx.file.language);
 
-  for (const kind of funcKinds) {
-    const nodes = root.findAll({ rule: { kind } });
-
-    for (const node of nodes) {
+  for (const fn of allFunctions) {
+      const node = fn.node;
       const range = node.range();
       const lines = range.end.line - range.start.line + 1;
 
       // For arrow functions, skip short inline callbacks
-      if (kind === "arrow_function") {
+      if (fn.kind === "arrow_function") {
         if (lines <= 10) continue;
         // Only flag if assigned to a variable or property
         const parent = node.parent();
@@ -189,9 +120,9 @@ function detectJavaScript(ctx: DetectionContext): Finding[] {
         }
       }
 
-      const name = getJsFunctionName(node);
+      const name = fn.name;
       const complexity = 1 + countComplexity(node, false);
-      const params = countJsParams(node);
+      const params = fn.params;
 
       const linesExceeded = lines > maxLines;
       const complexityExceeded = complexity > maxComplexity;
@@ -220,7 +151,6 @@ function detectJavaScript(ctx: DetectionContext): Finding[] {
       };
 
       findings.push(buildFinding(ctx, metrics, severity));
-    }
   }
 
   return findings;
@@ -234,15 +164,15 @@ function detectPython(ctx: DetectionContext): Finding[] {
   const maxComplexity = (ctx.config as Record<string, unknown>)?.maxComplexity as number ?? 15;
   const maxParams = (ctx.config as Record<string, unknown>)?.maxParams as number ?? 5;
 
-  const funcNodes = root.findAll({ rule: { kind: "function_definition" } });
+  const allFunctions = findFunctions(root, ctx.file.language);
 
-  for (const node of funcNodes) {
+  for (const fn of allFunctions) {
+    const node = fn.node;
     const range = node.range();
     const lines = range.end.line - range.start.line + 1;
-    const nameNode = node.children().find(ch => ch.kind() === "identifier");
-    const name = nameNode?.text() ?? "<anonymous>";
+    const name = fn.name;
     const complexity = 1 + countComplexity(node, true);
-    const params = countPyParams(node);
+    const params = fn.params;
 
     const linesExceeded = lines > maxLines;
     const complexityExceeded = complexity > maxComplexity;

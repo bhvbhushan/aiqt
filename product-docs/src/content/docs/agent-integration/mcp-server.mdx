@@ -3,7 +3,7 @@ title: MCP Server
 description: Use vibecop as an MCP server for Continue.dev, Amazon Q, Zed, and other MCP-compatible tools
 ---
 
-vibecop includes a built-in MCP (Model Context Protocol) server that exposes scan, check, and explain tools over stdio transport. This enables integration with any MCP-compatible AI coding tool.
+vibecop includes a built-in MCP (Model Context Protocol) server that exposes scan, check, explain, and context benchmark tools over stdio transport. This enables integration with any MCP-compatible AI coding tool.
 
 ## Starting the Server
 
@@ -30,7 +30,7 @@ Configure your MCP client to connect to vibecop:
 
 ## Available Tools
 
-The MCP server exposes three tools:
+The MCP server exposes four tools:
 
 ### vibecop_scan
 
@@ -71,6 +71,18 @@ Get detailed information about what a specific detector checks for.
 **Response:** JSON object with `id`, `name`, `description`, `severity`, `category`, and `languages`.
 
 If the detector ID is not found, returns an error with the list of all available detector IDs.
+
+### vibecop_context_benchmark
+
+Benchmark context optimization potential for a project. Shows per-file skeleton compression ratios and projected token savings at different re-read rates. Does not require bun.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|:--------:|---------|-------------|
+| `path` | string | No | Current working directory | Directory to benchmark |
+
+**Response:** JSON object with `totalFiles`, `totalTokens`, `topFiles` (top 10 by token count with skeleton compression), `projections` (savings at 20%/40%/60% re-read rates), and `enableCommand`.
 
 ## Tool-Specific Setup
 
@@ -128,9 +140,10 @@ The MCP server is built on the `@modelcontextprotocol/sdk` package and uses stdi
 MCP Client (Continue.dev / Amazon Q / Zed)
   ↕ JSON-RPC over stdio
 vibecop MCP Server
-  → vibecop_scan  → engine.scan()
-  → vibecop_check → engine.checkFile()
-  → vibecop_explain → detector metadata lookup
+  → vibecop_scan              → engine.scan()
+  → vibecop_check             → engine.checkFile()
+  → vibecop_explain           → detector metadata lookup
+  → vibecop_context_benchmark → benchmark() (token savings projection)
 ```
 
 The server handles graceful shutdown on SIGINT and SIGTERM. All logging goes to stderr so it does not interfere with the MCP protocol on stdout.

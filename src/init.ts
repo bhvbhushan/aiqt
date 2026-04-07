@@ -2,6 +2,29 @@ import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+/** Resolve the absolute path to dist/context.js from the vibecop package. */
+function resolveContextScript(): string {
+  // When installed via npm: this file is at <pkg>/dist/cli.js or <pkg>/src/init.ts
+  // dist/context.js sits next to dist/cli.js
+  const fromDist = new URL("../dist/context.js", import.meta.url);
+  try {
+    const { existsSync } = require("node:fs") as typeof import("node:fs");
+    if (existsSync(fromDist)) return fromDist.pathname;
+  } catch {}
+  // Fallback: try relative to cwd (local dev)
+  const { resolve } = require("node:path") as typeof import("node:path");
+  return resolve("dist/context.js");
+}
+
+function contextCommands(): { pre: string; post: string; compact: string } {
+  const script = resolveContextScript();
+  return {
+    pre: `bun ${script} --pre`,
+    post: `bun ${script} --post`,
+    compact: `bun ${script} --compact`,
+  };
+}
+
 interface DetectedTool {
   name: string;
   detected: boolean;
@@ -270,13 +293,138 @@ function padEnd(str: string, len: number): string {
   return str + " ".repeat(Math.max(0, len - str.length));
 }
 
-export async function runInit(cwd?: string): Promise<void> {
+function isBunAvailable(): boolean {
+  try {
+    execSync("bun --version", { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function generateContextHooks(root: string): GeneratedFile[] {
+  const generated: GeneratedFile[] = [];
+
+  // Only Claude Code supports the hooks needed for context optimization
+  if (!existsSync(join(root, ".claude"))) {
+    console.log("  Context optimization requires Claude Code (.claude/ directory).");
+    return generated;
+  }
+
+  const settingsPath = join(root, ".claude", "settings.json");
+  let settings: Record<string, unknown> = {};
+
+  if (existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+    } catch {
+      console.log("  Warning: Could not parse .claude/settings.json");
+      return generated;
+    }
+  }
+
+  const hooks = (settings.hooks ?? {}) as Record<string, unknown[]>;
+
+  // Check for existing context hooks to avoid conflicts
+  const preHooks = (hooks.PreToolUse ?? []) as Array<{ matcher?: string }>;
+  const hasExistingReadHook = preHooks.some(
+    (h) => h.matcher && /\bRead\b/.test(h.matcher),
+  );
+
+  if (hasExistingReadHook) {
+    console.log("  Warning: Existing PreToolUse Read hook detected.");
+    console.log("  Context optimization uses updatedInput which is single-consumer.");
+    console.log("  Skipping to avoid conflicts. See docs/agent-integration.md.");
+    generated.push({
+      path: ".claude/settings.json",
+      description: "context hooks skipped (existing Read hook)",
+    });
+    return generated;
+  }
+
+  // Resolve absolute paths to context.js
+  const cmds = contextCommands();
+
+  // Add context hooks
+  hooks.PreToolUse = [
+    ...(hooks.PreToolUse ?? []),
+    {
+      matcher: "Read",
+      hooks: [{ type: "command", command: cmds.pre }],
+    },
+  ];
+
+  hooks.PostToolUse = [
+    ...(hooks.PostToolUse ?? []),
+    {
+      matcher: "Read",
+      hooks: [{ type: "command", command: cmds.post }],
+    },
+  ];
+
+  // PostCompact is a session-level event, no matcher
+  const postCompact = (hooks.PostCompact ?? []) as unknown[];
+  postCompact.push({
+    hooks: [{ type: "command", command: cmds.compact }],
+  });
+  hooks.PostCompact = postCompact;
+
+  settings.hooks = hooks;
+  mkdirSync(join(root, ".claude"), { recursive: true });
+  writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`);
+
+  generated.push({
+    path: ".claude/settings.json",
+    description: "context optimization hooks (Pre/Post Read, PostCompact)",
+  });
+
+  return generated;
+}
+
+export interface InitOptions {
+  context?: boolean;
+}
+
+export async function runInit(cwd?: string, options?: InitOptions): Promise<void> {
   const root = cwd ?? process.cwd();
+  const enableContext = options?.context ?? false;
 
   console.log("");
   console.log("  vibecop — agent integration setup");
   console.log("");
 
+  if (enableContext) {
+    // Context optimization mode
+    if (!isBunAvailable()) {
+      console.log("  Error: Context optimization requires the bun runtime.");
+      console.log("  Install bun: https://bun.sh");
+      console.log("");
+      return;
+    }
+
+    console.log("  Setting up context optimization...");
+    console.log("");
+
+    const generated = generateContextHooks(root);
+
+    if (generated.length > 0) {
+      const maxPath = Math.max(...generated.map((g) => g.path.length));
+      console.log("  Generated:");
+      for (const file of generated) {
+        console.log(
+          `    ${padEnd(file.path, maxPath)}  — ${file.description}`,
+        );
+      }
+      console.log("");
+    }
+
+    console.log("  Context optimization configured.");
+    console.log("  Run 'vibecop context stats' to see token savings.");
+    console.log("");
+    return;
+  }
+
+  // Standard init — detect tools and generate configs
   const tools = detectTools(root);
   const anyDetected = tools.some((t) => t.detected);
 

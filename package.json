@@ -1,6 +1,6 @@
 {
   "name": "vibecop",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "AI code quality toolkit — deterministic linter for the AI coding era",
   "type": "module",
   "bin": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "bun build src/cli.ts --outdir dist --target node --external @ast-grep/napi --external @ast-grep/lang-python",
+    "build:context": "bun build src/context.ts --outdir dist --target bun --external @ast-grep/napi --external @ast-grep/lang-python",
     "build:action": "npx ncc build src/action/main.ts -o dist/action --source-map --license licenses.txt",
     "test": "bun test",
     "lint": "bunx biome check",
@@ -17,6 +18,7 @@
   },
   "files": [
     "dist/cli.js",
+    "dist/context.js",
     "README.md",
     "LICENSE"
   ],

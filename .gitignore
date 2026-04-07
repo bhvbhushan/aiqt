@@ -20,6 +20,9 @@ Thumbs.db
 .claude/
 .gstack/
 
+# vibecop context optimization cache
+.vibecop/
+
 # Environment
 .env
 .env.*

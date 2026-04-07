@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
+import { extractJsPackageName } from "../ast-utils.js";
 import type { Detector, DetectionContext, Finding } from "../types.js";
 import { makeFinding } from "./utils.js";
 
@@ -67,30 +68,6 @@ const PYTHON_BUILTINS = new Set([
   // Miscellaneous
   "formatter", "rlcompleter",
 ]);
-
-/**
- * Extract the package name from a JS/TS import specifier.
- * - `lodash` -> `lodash`
- * - `lodash/merge` -> `lodash`
- * - `@scope/pkg` -> `@scope/pkg`
- * - `@scope/pkg/sub` -> `@scope/pkg`
- */
-function extractJsPackageName(specifier: string): string | null {
-  if (!specifier) return null;
-
-  // Scoped package
-  if (specifier.startsWith("@")) {
-    const parts = specifier.split("/");
-    if (parts.length >= 2) {
-      return `${parts[0]}/${parts[1]}`;
-    }
-    return null;
-  }
-
-  // Unscoped: take first segment
-  const slashIdx = specifier.indexOf("/");
-  return slashIdx === -1 ? specifier : specifier.slice(0, slashIdx);
-}
 
 function isRelativeImport(specifier: string): boolean {
   return specifier.startsWith("./") || specifier.startsWith("../") || specifier === "." || specifier === "..";

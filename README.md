@@ -64,7 +64,26 @@ Agent writes code → vibecop hook fires → Findings? Agent fixes → Clean? Co
 }
 ```
 
-Three tools: `vibecop_scan`, `vibecop_check`, `vibecop_explain`.
+Four tools: `vibecop_scan`, `vibecop_check`, `vibecop_explain`, `vibecop_context_benchmark`.
+
+## Context Optimization
+
+Reduce token consumption by ~35% on Read tool re-reads. When Claude Code reads a file it's already seen, vibecop intercepts the Read and serves a compact AST skeleton instead of the full file. Unchanged files get smart-limited to 30 lines + skeleton context.
+
+**Requires bun runtime** (uses `bun:sqlite` for zero-dependency caching).
+
+```bash
+vibecop context benchmark  # See projected savings for your project
+vibecop init --context     # Configure hooks (Claude Code only)
+vibecop context stats      # View actual token savings after sessions
+```
+
+How it works:
+1. **First read** — full file passes through, skeleton is cached
+2. **Re-read (unchanged)** — smart-limited to 30 lines + skeleton injected via `additionalContext`
+3. **Re-read (changed)** — full file passes through with "file changed" note
+
+Skeletons include imports, function signatures, class outlines, and exports — enough for Claude to understand file structure without re-reading the full implementation.
 
 ## Benchmarks
 
@@ -114,7 +133,7 @@ Catches: god functions, N+1 queries, unsafe shell exec, SQL injection, hardcoded
 - [x] **Phase 2.5**: Agent integration (7 tools), 6 LLM/agent detectors, `vibecop init`
 - [x] **Phase 3**: Test quality detectors, custom YAML rules (28 → 35)
 - [x] **Phase 3.5**: MCP server with scan/check/explain tools
-- [ ] **Phase 4**: Context optimization (Read tool interception, AST skeleton caching)
+- [x] **Phase 4**: Context optimization (Read tool interception, AST skeleton caching)
 - [ ] **Phase 5**: VS Code extension, cross-file analysis
 
 ## Links

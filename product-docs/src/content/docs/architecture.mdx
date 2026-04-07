@@ -8,10 +8,12 @@ description: How vibecop works internally — engine data flow, detector pattern
 ```
 vibecop CLI (Commander.js)
 ├── Scan Engine           — discovers files, loads AST, runs detectors, dedup by priority
-├── MCP Server            — stdio transport, 3 tools (scan, check, explain)
+├── MCP Server            — stdio transport, 4 tools (scan, check, explain, context_benchmark)
+├── Context Optimization  — Read tool interception, AST skeleton caching (bun:sqlite)
 ├── Init Wizard           — auto-detects AI tools, generates hook/rule configs
 ├── Custom Rules Engine   — loads .vibecop/rules/*.yaml, validates with Zod, runs via ast-grep
 ├── Config Loader (Zod)   — validates .vibecop.yml, merges defaults, per-rule config
+├── AST Utilities         — shared findImports, findFunctions, findClasses, findExports
 ├── Detectors (35)        — AST pattern matching via ast-grep (@ast-grep/napi)
 ├── Formatters (7)        — text, json, html, sarif, github, agent, gcc output
 ├── Project Analyzer      — parses package.json, requirements.txt, lockfiles
@@ -40,9 +42,17 @@ vibecop/
 │   │   ├── html.ts             — Single-file HTML report
 │   │   ├── agent.ts            — Token-efficient one-per-line for AI hooks
 │   │   └── gcc.ts              — GCC-style for editor integration
+│   ├── ast-utils.ts            — Shared AST: findImports, findFunctions, findClasses, findExports
+│   ├── context.ts              — Context optimization entry (hook handlers, requires bun)
+│   ├── context/
+│   │   ├── benchmark.ts        — Benchmark command (pure ast-grep, runs under node)
+│   │   ├── cache.ts            — SQLite persistence (bun:sqlite, WAL mode)
+│   │   ├── session.ts          — File hashing, token estimation
+│   │   ├── skeleton.ts         — AST skeleton extraction
+│   │   └── stats.ts            — Token savings reporting
 │   ├── mcp/
 │   │   ├── index.ts            — MCP module entry, server creation + transport
-│   │   └── server.ts           — Tool handlers: scan, check, explain
+│   │   └── server.ts           — Tool handlers: scan, check, explain, context_benchmark
 │   ├── detectors/
 │   │   ├── index.ts            — Detector registry (all 35 built-in detectors)
 │   │   ├── utils.ts            — makeFinding/makeLineFinding helpers
@@ -163,9 +173,36 @@ The engine handles these error conditions explicitly:
 MCP Client (Continue.dev / Amazon Q / Zed)
   ↕ JSON-RPC over stdio
 vibecop MCP Server (@modelcontextprotocol/sdk)
-  → vibecop_scan  → engine.scan()
-  → vibecop_check → engine.checkFile()
-  → vibecop_explain → detector metadata lookup
+  → vibecop_scan              → engine.scan()
+  → vibecop_check             → engine.checkFile()
+  → vibecop_explain           → detector metadata lookup
+  → vibecop_context_benchmark → benchmark() (project token savings projection)
 ```
 
 The MCP server reuses the same `scan()` and `checkFile()` functions as the CLI. Tool input schemas are defined with Zod. The server handles graceful shutdown on SIGINT/SIGTERM.
+
+## Context Optimization Architecture
+
+Context optimization intercepts Claude Code Read tool calls to reduce token consumption on re-reads. It has two build targets with different runtimes:
+
+| Build | Runtime | Contents |
+|-------|---------|----------|
+| `dist/cli.js` | node | CLI + MCP + benchmark (no SQLite) |
+| `dist/context.js` | bun | Hook handlers + stats (bun:sqlite for caching) |
+
+```
+Read tool call
+  ├── PreToolUse fires → bun dist/context.js --pre
+  │   ├── First read? → passthrough (+ skeleton if cached)
+  │   ├── Re-read, unchanged? → smart-limit to 30 lines + skeleton
+  │   └── Re-read, changed? → passthrough + "file changed" note
+  │
+  ├── Read tool executes (full or smart-limited)
+  │
+  └── PostToolUse fires → bun dist/context.js --post
+      ├── Record session read
+      ├── Extract AST skeleton (imports, functions, classes, exports)
+      └── Cache skeleton + token counts in SQLite
+```
+
+Skeletons are extracted using the same `@ast-grep/napi` parser as the detectors, via shared utilities in `src/ast-utils.ts`. The SQLite database uses WAL mode for concurrent access and is stored at `.vibecop/.vibecop-context.db` (gitignored).

@@ -68,6 +68,54 @@ This scans only files with uncommitted changes, making the hook fast even in lar
 
 If `.claude/settings.json` already exists, `vibecop init` will skip it to avoid overwriting your configuration. In that case, add the `PostToolUse` hook manually by merging the JSON above into your existing settings.
 
+## Context Optimization (v0.4.1+)
+
+vibecop can intercept Read tool calls to reduce token consumption on re-reads. When Claude Code reads a file it has already seen in the current session, vibecop smart-limits the read to 30 lines and injects an AST skeleton (imports, function signatures, class outlines) via `additionalContext`.
+
+**Requires bun runtime** for SQLite caching.
+
+### Setup
+
+```bash
+npx vibecop init --context
+```
+
+This adds three hooks to `.claude/settings.json`:
+
+- **PreToolUse Read** -- checks if the file was read before, smart-limits re-reads
+- **PostToolUse Read** -- caches the AST skeleton after each read
+- **PostCompact** -- prunes old session data
+
+### Benchmark First
+
+Before enabling, see projected savings for your project:
+
+```bash
+npx vibecop context benchmark
+```
+
+This scans your codebase and shows per-file skeleton compression ratios and projected token savings. No bun required for the benchmark.
+
+### View Stats
+
+After working with context optimization enabled:
+
+```bash
+npx vibecop context stats
+```
+
+Shows total reads, cache hits, hit rate, and tokens saved across sessions.
+
+### How It Works
+
+1. **First read** -- full file passes through, skeleton is cached in `.vibecop/.vibecop-context.db`
+2. **Re-read (unchanged)** -- smart-limited to 30 lines + skeleton injected via `additionalContext`
+3. **Re-read (changed)** -- full file passes through with "file changed" note
+
+### Conflict Detection
+
+`vibecop init --context` checks for existing PreToolUse Read hooks before adding its own. If another tool already uses `updatedInput` on Read, vibecop skips to avoid conflicts (only one hook can modify `updatedInput` per tool call).
+
 ## Troubleshooting
 
 ### vibecop not found

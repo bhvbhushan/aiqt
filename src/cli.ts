@@ -237,9 +237,10 @@ function main(): void {
   program
     .command("init")
     .description("Set up vibecop integration with AI coding tools")
-    .action(async () => {
+    .option("--context", "Enable context optimization (requires bun)", false)
+    .action(async (options: { context: boolean }) => {
       const { runInit } = await import("./init.js");
-      await runInit();
+      await runInit(undefined, { context: options.context });
     });
 
   program
@@ -248,6 +249,47 @@ function main(): void {
     .action(async () => {
       const { startServer } = await import("./mcp/index.js");
       await startServer();
+    });
+
+  program
+    .command("context")
+    .description("Context optimization — run as hook handler or view stats")
+    .argument("[mode]", "Mode: stats | benchmark (default: stats)")
+    .option("--pre", "PreToolUse handler (reads stdin)", false)
+    .option("--post", "PostToolUse handler (reads stdin)", false)
+    .option("--compact", "PostCompact handler (reads stdin)", false)
+    .action(async (mode: string | undefined, options: { pre: boolean; post: boolean; compact: boolean }) => {
+      // benchmark runs directly under node (no bun:sqlite needed)
+      if (mode === "benchmark") {
+        const { benchmark, formatBenchmark } = await import("./context/benchmark.js");
+        console.log(formatBenchmark(benchmark(process.cwd())));
+        return;
+      }
+
+      // stats and hooks need bun:sqlite — shell out to bun
+      const args: string[] = [];
+      if (options.pre) args.push("--pre");
+      else if (options.post) args.push("--post");
+      else if (options.compact) args.push("--compact");
+      else args.push(mode ?? "stats");
+
+      // context.js uses bun:sqlite — always requires bun runtime
+      const { execSync } = await import("node:child_process");
+      const { existsSync } = await import("node:fs");
+      const distPath = new URL("../dist/context.js", import.meta.url).pathname;
+      const srcPath = new URL("./context.ts", import.meta.url).pathname;
+      const contextPath = existsSync(distPath) ? distPath : srcPath;
+
+      try {
+        execSync(`bun ${contextPath} ${args.join(" ")}`, {
+          stdio: "inherit",
+          cwd: process.cwd(),
+        });
+      } catch (err: unknown) {
+        if (err && typeof err === "object" && "status" in err) {
+          process.exit((err as { status: number }).status);
+        }
+      }
     });
 
   program

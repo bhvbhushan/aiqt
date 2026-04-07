@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-04-07
+
+### Added
+
+- **Context optimization** — intercepts Claude Code Read tool re-reads to reduce token consumption
+  - AST skeleton caching via `bun:sqlite` (WAL mode, zero-dep under bun)
+  - Smart-limits unchanged re-reads to 30 lines + skeleton injected via `additionalContext`
+  - `vibecop init --context` configures PreToolUse/PostToolUse/PostCompact hooks with conflict detection
+  - `vibecop context benchmark` shows projected savings for any project (runs under node, no bun required)
+  - `vibecop context stats` shows actual token savings after sessions (requires bun)
+- **MCP tool: `vibecop_context_benchmark`** — benchmark context optimization potential through the MCP server
+- **Shared AST utilities** — new `src/ast-utils.ts` with `findImports()`, `findFunctions()`, `findClasses()`, `findExports()`, `extractJsPackageName()`
+- Build target: `bun run build:context` produces `dist/context.js` (26KB, bun runtime)
+
+### Changed
+
+- Refactored 4 detectors (god-component, god-function, mixed-concerns, undeclared-import) to use shared AST utilities — reduced code duplication, same behavior
+- `god-function` removed 68 lines of local helper functions now shared via ast-utils
+
+### Internal
+
+- 42 new tests (610 total): ast-utils (28), skeleton (12), cache (15), integration (11), init --context (4)
+- `.vibecop/` added to `.gitignore` (SQLite cache is project-local state)
+
 ## [0.4.0] - 2026-04-06
 
 ### Added
