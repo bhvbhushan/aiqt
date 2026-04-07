@@ -1,3 +1,4 @@
+import { findImports } from "../ast-utils.js";
 import type { Detector, DetectionContext, Finding } from "../types.js";
 import { makeLineFinding } from "./utils.js";
 
@@ -35,7 +36,7 @@ function detect(ctx: DetectionContext): Finding[] {
   if (ctx.source.includes('"use server"') || ctx.source.includes("'use server'")) return findings;
 
   const root = ctx.root.root();
-  const imports = root.findAll({ rule: { kind: "import_statement" } });
+  const imports = findImports(root, ctx.file.language);
 
   let hasUIImport = false;
   let hasDBImport = false;
@@ -44,10 +45,7 @@ function detect(ctx: DetectionContext): Finding[] {
   let dbImportName = "";
 
   for (const imp of imports) {
-    const sourceNode = imp.children().find(ch => ch.kind() === "string");
-    if (!sourceNode) continue;
-
-    const specifier = sourceNode.text().slice(1, -1);
+    const specifier = imp.source;
     const pkgName = specifier.startsWith("@")
       ? specifier.split("/").slice(0, 2).join("/")
       : specifier.split("/")[0];

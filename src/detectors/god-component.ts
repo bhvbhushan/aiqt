@@ -1,3 +1,4 @@
+import { findImports } from "../ast-utils.js";
 import type { Detector, DetectionContext, Finding } from "../types.js";
 import { makeLineFinding } from "./utils.js";
 
@@ -73,8 +74,7 @@ function detect(ctx: DetectionContext): Finding[] {
 
   // --- Count imports via AST ---
   const root = ctx.root.root();
-  const importStatements = root.findAll({ rule: { kind: "import_statement" } });
-  const importCount = importStatements.length;
+  const importCount = findImports(root, ctx.file.language).length;
 
   // --- Count total lines ---
   const lineCount = source.split("\n").length;
