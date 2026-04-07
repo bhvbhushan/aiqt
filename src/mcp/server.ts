@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { scan, checkFile } from "../engine.js";
 import { builtinDetectors } from "../detectors/index.js";
+import { benchmark } from "../context/benchmark.js";
 import type { ScanResult } from "../types.js";
 
 /** Format a ScanResult as a JSON text content block for MCP */
@@ -116,4 +117,57 @@ export async function handleExplain(args: { detector_id: string }) {
       },
     ],
   };
+}
+
+/** Input schema for vibecop_context_benchmark */
+export const contextBenchmarkInputSchema = {
+  path: z.string().optional().describe("Directory to benchmark. Defaults to current working directory."),
+};
+
+/** Handler for vibecop_context_benchmark tool */
+export async function handleContextBenchmark(args: { path?: string }) {
+  try {
+    const result = benchmark(args.path ?? ".");
+    if (result.totalFiles === 0) {
+      return {
+        content: [{ type: "text" as const, text: "No supported files found (.js, .ts, .tsx, .py)." }],
+      };
+    }
+
+    const top10 = result.files.slice(0, 10).map((f) => ({
+      file: f.path,
+      tokens: f.fullTokens,
+      skeletonTokens: f.skeletonTokens,
+      reduction: `${f.reductionPercent}%`,
+    }));
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              totalFiles: result.totalFiles,
+              totalTokens: result.totalTokens,
+              topFiles: top10,
+              projections: result.projections.map((p) => ({
+                rereadRate: `${p.rereadPercent}%`,
+                tokensSaved: p.tokensSaved,
+                percentOfTotal: `${p.percentOfTotal}%`,
+              })),
+              enableCommand: "vibecop init --context",
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      content: [{ type: "text" as const, text: `Error running benchmark: ${message}` }],
+      isError: true,
+    };
+  }
 }

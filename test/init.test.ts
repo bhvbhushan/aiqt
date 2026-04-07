@@ -173,4 +173,76 @@ describe("vibecop init", () => {
     );
     expect(hooks.hooks.PostToolUse).toBeDefined();
   });
+
+  describe("--context flag", () => {
+    test("generates context hooks when .claude/ exists", async () => {
+      mkdirSync(join(tempDir, ".claude"), { recursive: true });
+
+      await runInit(tempDir, { context: true });
+
+      const settingsPath = join(tempDir, ".claude", "settings.json");
+      expect(existsSync(settingsPath)).toBe(true);
+
+      const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+      // Should have PreToolUse Read hook
+      const preHooks = settings.hooks?.PreToolUse ?? [];
+      expect(preHooks.some((h: { matcher?: string }) => h.matcher === "Read")).toBe(true);
+      // Should have PostToolUse Read hook
+      const postHooks = settings.hooks?.PostToolUse ?? [];
+      expect(postHooks.some((h: { matcher?: string }) => h.matcher === "Read")).toBe(true);
+      // Should have PostCompact hook
+      expect(settings.hooks?.PostCompact).toBeDefined();
+    });
+
+    test("merges with existing hooks instead of overwriting", async () => {
+      mkdirSync(join(tempDir, ".claude"), { recursive: true });
+      const existing = {
+        hooks: {
+          PostToolUse: [
+            { matcher: "Edit|Write", hooks: [{ type: "command", command: "npx vibecop scan" }] },
+          ],
+        },
+      };
+      writeFileSync(join(tempDir, ".claude", "settings.json"), JSON.stringify(existing));
+
+      await runInit(tempDir, { context: true });
+
+      const settings = JSON.parse(
+        readFileSync(join(tempDir, ".claude", "settings.json"), "utf-8"),
+      );
+      // Original PostToolUse hook should still exist
+      const postHooks = settings.hooks.PostToolUse;
+      expect(postHooks.some((h: { matcher?: string }) => h.matcher === "Edit|Write")).toBe(true);
+      // New Read PostToolUse hook should be added
+      expect(postHooks.some((h: { matcher?: string }) => h.matcher === "Read")).toBe(true);
+    });
+
+    test("skips when existing Read hook would conflict", async () => {
+      mkdirSync(join(tempDir, ".claude"), { recursive: true });
+      const existing = {
+        hooks: {
+          PreToolUse: [
+            { matcher: "Read", hooks: [{ type: "command", command: "other-tool" }] },
+          ],
+        },
+      };
+      writeFileSync(join(tempDir, ".claude", "settings.json"), JSON.stringify(existing));
+
+      await runInit(tempDir, { context: true });
+
+      const settings = JSON.parse(
+        readFileSync(join(tempDir, ".claude", "settings.json"), "utf-8"),
+      );
+      // Should NOT add another PreToolUse Read hook
+      const preHooks = settings.hooks.PreToolUse;
+      expect(preHooks.length).toBe(1);
+      expect(preHooks[0].hooks[0].command).toBe("other-tool");
+    });
+
+    test("requires .claude/ directory", async () => {
+      // No .claude/ directory
+      await runInit(tempDir, { context: true });
+      expect(existsSync(join(tempDir, ".claude", "settings.json"))).toBe(false);
+    });
+  });
 });

@@ -8,6 +8,8 @@ import {
   handleCheck,
   explainInputSchema,
   handleExplain,
+  contextBenchmarkInputSchema,
+  handleContextBenchmark,
 } from "./server.js";
 
 /** Read version from package.json */
@@ -48,6 +50,12 @@ export function createServer(): McpServer {
       "Explain what a vibecop detector checks for, its severity, and category.",
     inputSchema: explainInputSchema,
   }, handleExplain);
+
+  server.registerTool("vibecop_context_benchmark", {
+    description:
+      "Benchmark context optimization potential for a project. Shows per-file skeleton compression ratios and projected token savings at different re-read rates. No bun required.",
+    inputSchema: contextBenchmarkInputSchema,
+  }, handleContextBenchmark);
 
   return server;
 }
