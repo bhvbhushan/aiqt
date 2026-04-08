@@ -181,7 +181,9 @@ vibecop MCP Server (@modelcontextprotocol/sdk)
 
 The MCP server reuses the same `scan()` and `checkFile()` functions as the CLI. Tool input schemas are defined with Zod. The server handles graceful shutdown on SIGINT/SIGTERM.
 
-## Context Optimization Architecture
+## Context Optimization Architecture (Beta)
+
+> **Beta:** Hook paths are absolute and resolved at `init --context` time. Re-run after upgrading vibecop or reinstalling dependencies.
 
 Context optimization intercepts Claude Code Read tool calls to reduce token consumption on re-reads. It has two build targets with different runtimes:
 

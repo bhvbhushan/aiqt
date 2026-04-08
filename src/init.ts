@@ -403,7 +403,7 @@ export async function runInit(cwd?: string, options?: InitOptions): Promise<void
       return;
     }
 
-    console.log("  Setting up context optimization...");
+    console.log("  Setting up context optimization (beta)...");
     console.log("");
 
     const generated = generateContextHooks(root);
@@ -419,7 +419,8 @@ export async function runInit(cwd?: string, options?: InitOptions): Promise<void
       console.log("");
     }
 
-    console.log("  Context optimization configured.");
+    console.log("  Context optimization configured (beta).");
+    console.log("  Re-run this command after upgrading vibecop or reinstalling deps.");
     console.log("  Run 'vibecop context stats' to see token savings.");
     console.log("");
     return;

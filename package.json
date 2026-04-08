@@ -1,6 +1,6 @@
 {
   "name": "vibecop",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "AI code quality toolkit — deterministic linter for the AI coding era",
   "type": "module",
   "bin": {
@@ -14,7 +14,7 @@
     "lint": "bunx biome check",
     "typecheck": "bunx tsc --noEmit",
     "test:install": "bash scripts/test-install.sh",
-    "prepublishOnly": "bun run lint && bun run typecheck && bun test && bun run build && bun run test:install"
+    "prepublishOnly": "bun run lint && bun run typecheck && bun test && bun run build && bun run build:context && bun run test:install"
   },
   "files": [
     "dist/cli.js",

@@ -5,17 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-04-08
+
+### Fixed
+
+- **Missing dist/context.js in npm package** — `prepublishOnly` now runs `build:context` so `dist/context.js` is actually included in the published tarball (was missing in 0.4.1 and 0.4.2, making context optimization completely non-functional)
+- **Context optimization marked as Beta** across all documentation, CLI output, and changelog
+
 ## [0.4.2] - 2026-04-08
 
 ### Fixed
 
-- **Context optimization path resolution** — `vibecop init --context` now correctly resolves `dist/context.js` from the vibecop package directory, not the user's project. Previously, locally-installed vibecop would generate hook commands pointing to a non-existent `dist/context.js` in the user's project root.
+- **Context optimization path resolution** — `vibecop init --context` now correctly resolves `dist/context.js` from the vibecop package directory, not the user's project
 
 ## [0.4.1] - 2026-04-07
 
 ### Added
 
-- **Context optimization** — intercepts Claude Code Read tool re-reads to reduce token consumption
+- **Context optimization (Beta)** — intercepts Claude Code Read tool re-reads to reduce token consumption
   - AST skeleton caching via `bun:sqlite` (WAL mode, zero-dep under bun)
   - Smart-limits unchanged re-reads to 30 lines + skeleton injected via `additionalContext`
   - `vibecop init --context` configures PreToolUse/PostToolUse/PostCompact hooks with conflict detection

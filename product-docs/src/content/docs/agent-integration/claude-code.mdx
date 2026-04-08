@@ -68,11 +68,13 @@ This scans only files with uncommitted changes, making the hook fast even in lar
 
 If `.claude/settings.json` already exists, `vibecop init` will skip it to avoid overwriting your configuration. In that case, add the `PostToolUse` hook manually by merging the JSON above into your existing settings.
 
-## Context Optimization (v0.4.1+)
+## Context Optimization (Beta)
+
+> **Beta:** This feature is under active testing. After upgrading vibecop or reinstalling node_modules, re-run `vibecop init --context` to refresh hook paths.
 
 vibecop can intercept Read tool calls to reduce token consumption on re-reads. When Claude Code reads a file it has already seen in the current session, vibecop smart-limits the read to 30 lines and injects an AST skeleton (imports, function signatures, class outlines) via `additionalContext`.
 
-**Requires bun runtime** for SQLite caching.
+**Requires bun runtime** for SQLite caching. Claude Code only.
 
 ### Setup
 
