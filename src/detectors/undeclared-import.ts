@@ -83,6 +83,11 @@ function isPathAlias(specifier: string): boolean {
   return specifier.startsWith("@/") || specifier.startsWith("~/");
 }
 
+/** SvelteKit virtual modules ($lib, $app, $env, $service-worker, etc.) */
+function isSvelteKitVirtualModule(specifier: string): boolean {
+  return specifier.startsWith("$");
+}
+
 /** Cache for nearest dependency lookups, keyed by directory path */
 const nearestDepsCache = new Map<string, Set<string>>();
 
@@ -450,6 +455,7 @@ function detectJavaScriptUndeclaredImports(ctx: DetectionContext): Finding[] {
     if (specifier.startsWith("https://") || specifier.startsWith("http://") || specifier.startsWith("jsr:") || specifier.startsWith("npm:")) continue;
     if (isNodeBuiltin(specifier)) continue;
     if (isPathAlias(specifier)) continue;
+    if (isSvelteKitVirtualModule(specifier)) continue;
 
     const packageName = extractJsPackageName(specifier);
     if (!packageName) continue;
@@ -494,6 +500,7 @@ function detectJavaScriptUndeclaredImports(ctx: DetectionContext): Finding[] {
     if (specifier.startsWith("https://") || specifier.startsWith("http://") || specifier.startsWith("jsr:") || specifier.startsWith("npm:")) continue;
     if (isNodeBuiltin(specifier)) continue;
     if (isPathAlias(specifier)) continue;
+    if (isSvelteKitVirtualModule(specifier)) continue;
 
     const packageName = extractJsPackageName(specifier);
     if (!packageName) continue;

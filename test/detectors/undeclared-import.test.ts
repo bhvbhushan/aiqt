@@ -184,6 +184,33 @@ describe("undeclared-import", () => {
       expect(findings.length).toBe(0);
     });
 
+    test("does NOT flag SvelteKit virtual modules ($lib, $app, etc.)", () => {
+      const ctx = makeCtx(
+        `import { db } from '$lib/db';\nimport { error } from '$app/stores';\nimport { env } from '$env/dynamic/private';\nimport { foo } from '$lib/server/foo';`,
+        EMPTY_PROJECT_WITH_MANIFEST,
+      );
+      const findings = undeclaredImport.detect(ctx);
+      expect(findings.length).toBe(0);
+    });
+
+    test("does NOT flag SvelteKit $service-worker import", () => {
+      const ctx = makeCtx(
+        `import { build, files, version } from '$service-worker';`,
+        EMPTY_PROJECT_WITH_MANIFEST,
+      );
+      const findings = undeclaredImport.detect(ctx);
+      expect(findings.length).toBe(0);
+    });
+
+    test("does NOT flag SvelteKit virtual modules in require()", () => {
+      const ctx = makeCtx(
+        `const db = require('$lib/db');`,
+        EMPTY_PROJECT_WITH_MANIFEST,
+      );
+      const findings = undeclaredImport.detect(ctx);
+      expect(findings.length).toBe(0);
+    });
+
     test("detects require() calls with undeclared packages", () => {
       const ctx = makeCtx(
         `const axios = require('axios');`,
